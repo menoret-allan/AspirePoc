@@ -8,7 +8,7 @@ builder.AddServiceDefaults();
 // Add services to the container.
 builder.Services.AddProblemDetails();
 
-// example of work around because some stuff are not prod ready
+// example of work around because some stuff are not prod ready, we have to disable tracing because some method are missing and called...
 builder.AddNpgsqlDbContext<MyDbContext>("somedb", c => c.DisableTracing = true);
 
 builder.AddRedisClient("cache");
@@ -76,7 +76,11 @@ app.MapGet("/results/{id}", async (int id, MyDbContext db) => await db.Results.F
     : Results.NotFound());
 app.MapPost("/results", (Result result, MyDbContext db) =>
 {
+    // Input: contains an algo and a dataset
+    // we need to fetch them if they exist and then trigger the algo by using the databus
     // TODO: post in the bus to run an algo
+    // option1: do the calculation and wait within the endpoint
+    // option2: return OK and do calculation in the background
     return Results.Ok();
 });
 
