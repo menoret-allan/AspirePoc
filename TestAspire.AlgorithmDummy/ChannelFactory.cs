@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client;
 
-namespace TestAspire.ApiService.Services
+namespace TestAspire.AlgorithmDummy
 {
     public class ChannelFactory(
         IConnection messageConnection,

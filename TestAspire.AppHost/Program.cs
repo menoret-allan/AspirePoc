@@ -27,9 +27,13 @@ var creationScript = $$"""
 var db = postgres.AddDatabase(databaseName)
     .WithCreationScript(creationScript);
 
+var algorithmDummy = builder.AddProject<TestAspire_AlgorithmDummy>("algorithmdummy")
+    .WithReference(rabbitmq).WaitFor(rabbitmq);
+
 var apiService = builder.AddProject<TestAspire_ApiService>("apiservice")
     .WithReference(db).WaitFor(db)
-    .WithReference(rabbitmq)
+    .WaitFor(algorithmDummy)
+    .WithReference(rabbitmq).WaitFor(rabbitmq)
     .WithReference(cache);
 
 builder.AddProject<TestAspire_Web>("webfrontend")

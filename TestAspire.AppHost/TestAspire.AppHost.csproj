@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TestAspire.AlgorithmDummy\TestAspire.AlgorithmDummy.csproj" />
     <ProjectReference Include="..\TestAspire.ApiService\TestAspire.ApiService.csproj" />
     <ProjectReference Include="..\TestAspire.Web\TestAspire.Web.csproj" />
   </ItemGroup>

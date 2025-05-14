@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using TestAspire.ApiService.DataTransferObjects;
 using TestAspire.ApiService.Entities;
 
 namespace TestAspire.ApiService.Services;
@@ -10,7 +11,7 @@ public class ResultsConsumerService(
     ILogger<ResultsConsumerService> logger)
     : BackgroundService
 {
-    private readonly IModel _messageChannel = channelFactory.GetResultsChannel();
+    private readonly IModel _messageChannel = channelFactory.GetCalculationResultsChannel();
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {

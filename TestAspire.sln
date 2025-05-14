@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAspire.Web", "TestAspir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAspire.ApiService.Tests", "TestAspire.ApiService.Tests\TestAspire.ApiService.Tests.csproj", "{300196A9-290A-4571-8376-55508D3079E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAspire.AlgorithmDummy", "TestAspire.AlgorithmDummy\TestAspire.AlgorithmDummy.csproj", "{9BE0EC59-B47F-29EF-9EDB-0719B30AA609}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{300196A9-290A-4571-8376-55508D3079E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{300196A9-290A-4571-8376-55508D3079E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{300196A9-290A-4571-8376-55508D3079E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BE0EC59-B47F-29EF-9EDB-0719B30AA609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BE0EC59-B47F-29EF-9EDB-0719B30AA609}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BE0EC59-B47F-29EF-9EDB-0719B30AA609}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BE0EC59-B47F-29EF-9EDB-0719B30AA609}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
