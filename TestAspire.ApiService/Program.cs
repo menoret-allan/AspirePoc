@@ -1,9 +1,11 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
 using System.Data;
 using TestAspire.ApiService;
 using TestAspire.ApiService.DataTransferObjects;
 using TestAspire.ApiService.Entities;
+using TestAspire.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,11 @@ builder.AddRedisClient("cache");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.AddRabbitMQClient("messaging");
+builder.Services.AddTransient<ChannelFactory>();
+builder.Services.AddTransient<ResultsPublisherService>();
+builder.Services.AddHostedService<ResultsConsumerService>();
 
 var app = builder.Build();
 
@@ -119,8 +126,9 @@ app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =
     var mappedResult = autoMapper.Map<ResultDto>(resultInDb);
     return Results.Ok(mappedResult);
 });
-app.MapPost("/results", (ResultDto result, IMapper autoMapper) =>
+app.MapPost("/results", (ResultDto result, IMapper autoMapper, ResultsPublisherService publisher) =>
 {
+    publisher.Send(result);
     // Input: contains an algo and a dataset
     // we need to fetch them if they exist and then trigger the algo by using the databus
     // TODO: post in the bus to run an algo

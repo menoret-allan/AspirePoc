@@ -11,6 +11,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Aspire.RabbitMQ.Client" Version="9.2.1" />
 		<PackageReference Include="Aspire.StackExchange.Redis" Version="8.0.1" />
 		<PackageReference Include="Aspire.Npgsql" Version="8.0.1" />
 		<PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.1" />
