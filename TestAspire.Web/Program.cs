@@ -1,4 +1,5 @@
 using TestAspire.Web;
+using TestAspire.Web.Api;
 using TestAspire.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,8 +19,9 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
     // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
     client.BaseAddress = new Uri("https+http://apiservice");
 });
+builder.Services.AddHttpClient<AlgoClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
 
-builder.AddRedisClient(connectionName: "cache");
+builder.AddRedisClient("cache");
 
 var app = builder.Build();
 

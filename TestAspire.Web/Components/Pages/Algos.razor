@@ -1,0 +1,46 @@
+﻿@page "/algos"
+@using TestAspire.Web.Api
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject AlgoClient AlgoApi
+
+<PageTitle>Algos</PageTitle>
+
+<h1>Algos</h1>
+
+<p>This component allow fetch algos which are available in the backend.</p>
+
+@if (algos == null)
+{
+    <p><em>Page is loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var algo in algos)
+            {
+                <tr>
+                    <td>@algo.name</td>
+                    <td>@algo.version</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Algo[]? algos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        algos = await AlgoApi.GetAlgosAsync();
+    }
+}
