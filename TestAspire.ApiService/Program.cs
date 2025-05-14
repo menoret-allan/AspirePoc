@@ -1,4 +1,8 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using TestAspire.ApiService;
+using TestAspire.ApiService.DataTransferObjects;
 using TestAspire.ApiService.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +12,7 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutomapperProfile>());
 
 // example of work around because some stuff are not prod ready, we have to disable tracing because some method are missing and called...
 builder.AddNpgsqlDbContext<MyDbContext>("somedb", c => c.DisableTracing = true);
@@ -46,36 +51,75 @@ app.MapGet("/weatherforecast", () =>
     })
     .WithName("GetWeatherForecast");
 
-app.MapGet("/datasets", async (MyDbContext db) => await db.Datasets.ToListAsync());
-app.MapGet("/datasets/{id}", async (int id, MyDbContext db) => await db.Datasets.FindAsync(id)
-    is { } dataset
-    ? Results.Ok(dataset)
-    : Results.NotFound());
-app.MapPost("/datasets", async (Dataset dataset, MyDbContext db) =>
+app.MapGet("/datasets", async (IMapper autoMapper, MyDbContext db) =>
 {
-    db.Datasets.Add(dataset);
+    var datasetsInDb = await db.Datasets.ToListAsync();
+    var mappedDatasets = autoMapper.Map<IEnumerable<DatasetDto>>(datasetsInDb);
+    return mappedDatasets;
+});
+app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
+{
+    var datasetInDb = await db.Datasets.FindAsync(id);
+    if (datasetInDb is null)
+    {
+        return Results.NotFound();
+    }
+
+    var mappedDataset = autoMapper.Map<DatasetDto>(datasetInDb);
+    return Results.Ok(mappedDataset);
+});
+app.MapPost("/datasets", async (DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
+{
+    var datasetForDb = autoMapper.Map<Dataset>(dataset);
+    db.Datasets.Add(datasetForDb);
     await db.SaveChangesAsync();
-    return Results.Created($"/datasets/{dataset.Id}", dataset);
+    return Results.Created($"/datasets/{dataset.Id}", autoMapper.Map<DatasetDto>(datasetForDb));
 });
 
-app.MapGet("/algos", async (MyDbContext db) => await db.Algos.ToListAsync());
-app.MapGet("/algos/{id}", async (int id, MyDbContext db) => await db.Algos.FindAsync(id)
-    is { } algo
-    ? Results.Ok(algo)
-    : Results.NotFound());
-app.MapPost("/algos", async (Algo algo, MyDbContext db) =>
+app.MapGet("/algos", async (IMapper autoMapper, MyDbContext db) =>
 {
-    db.Algos.Add(algo);
+    var algorithmsInDb = await db.Algos.ToListAsync();
+    var mappedAlgorithms = autoMapper.Map<IEnumerable<AlgoDto>>(algorithmsInDb);
+    return mappedAlgorithms;
+});
+app.MapGet("/algos/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
+{
+    var algoInDb = await db.Algos.FindAsync(id);
+    if (algoInDb is null)
+    {
+        return Results.NotFound(id);
+    }
+
+    var mappedAlgo = autoMapper.Map<AlgoDto>(algoInDb);
+    return Results.Ok(mappedAlgo);
+});
+app.MapPost("/algos", async (AlgoDto algo, IMapper autoMapper, MyDbContext db) =>
+{
+    var algoForDb = autoMapper.Map<Algo>(algo);
+    db.Algos.Add(algoForDb);
     await db.SaveChangesAsync();
-    return Results.Created($"/algos/{algo.Id}", algo);
+    return Results.Created($"/algos/{algoForDb.Id}", autoMapper.Map<AlgoDto>(algoForDb));
 });
 
-app.MapGet("/results", async (MyDbContext db) => await db.Results.ToListAsync());
-app.MapGet("/results/{id}", async (int id, MyDbContext db) => await db.Results.FindAsync(id)
-    is { } result
-    ? Results.Ok(result)
-    : Results.NotFound());
-app.MapPost("/results", (Result result, MyDbContext db) =>
+app.MapGet("/results", async (IMapper autoMapper, MyDbContext db) =>
+{
+    var resultsInDb = await db.Results.ToListAsync();
+    var mappedResults = autoMapper.Map<IEnumerable<ResultDto>>(resultsInDb);
+    return Results.Ok(mappedResults);
+});
+
+app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
+{
+    var resultInDb = await db.Results.FindAsync(id);
+    if (resultInDb is null)
+    {
+        return Results.NotFound(id);
+    }
+
+    var mappedResult = autoMapper.Map<ResultDto>(resultInDb);
+    return Results.Ok(mappedResult);
+});
+app.MapPost("/results", (ResultDto result, IMapper autoMapper) =>
 {
     // Input: contains an algo and a dataset
     // we need to fetch them if they exist and then trigger the algo by using the databus
