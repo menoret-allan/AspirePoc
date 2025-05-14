@@ -18,6 +18,7 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutomapperProfile>());
 
 // example of work around because some stuff are not prod ready, we have to disable tracing because some method are missing and called...
 builder.AddNpgsqlDbContext<MyDbContext>("somedb", c => c.DisableTracing = true);
+builder.Services.AddDbContextFactory<MyDbContext>();
 
 builder.AddRedisClient("cache");
 
@@ -78,7 +79,7 @@ app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) 
 app.MapPost("/datasets", async (DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
 {
     var datasetForDb = autoMapper.Map<Dataset>(dataset);
-    db.Datasets.Add(datasetForDb);
+    db.Datasets.Update(datasetForDb);
     await db.SaveChangesAsync();
     return Results.Created($"/datasets/{dataset.Id}", autoMapper.Map<DatasetDto>(datasetForDb));
 });
@@ -103,7 +104,7 @@ app.MapGet("/algos/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
 app.MapPost("/algos", async (AlgoDto algo, IMapper autoMapper, MyDbContext db) =>
 {
     var algoForDb = autoMapper.Map<Algo>(algo);
-    db.Algos.Add(algoForDb);
+    db.Algos.Update(algoForDb);
     await db.SaveChangesAsync();
     return Results.Created($"/algos/{algoForDb.Id}", autoMapper.Map<AlgoDto>(algoForDb));
 });
@@ -126,16 +127,22 @@ app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =
     var mappedResult = autoMapper.Map<ResultDto>(resultInDb);
     return Results.Ok(mappedResult);
 });
-app.MapPost("/results", (ResultDto result, IMapper autoMapper, ResultsPublisherService publisher) =>
-{
-    publisher.Send(result);
-    // Input: contains an algo and a dataset
-    // we need to fetch them if they exist and then trigger the algo by using the databus
-    // TODO: post in the bus to run an algo
-    // option1: do the calculation and wait within the endpoint
-    // option2: return OK and do calculation in the background
-    return Results.Ok();
-});
+app.MapPost("/results",
+    async (ResultDto result, MyDbContext db, IMapper autoMapper, ResultsPublisherService publisher) =>
+    {
+        var resultForDb = autoMapper.Map<Result>(result);
+        db.Results.Update(resultForDb);
+        await db.SaveChangesAsync();
+        var mappedResult = autoMapper.Map<ResultDto>(resultForDb);
+        publisher.Send(mappedResult);
+
+        // Input: contains an algo and a dataset
+        // we need to fetch them if they exist and then trigger the algo by using the databus
+        // TODO: post in the bus to run an algo
+        // option1: do the calculation and wait within the endpoint
+        // option2: return OK and do calculation in the background
+        return Results.Created($"/algos/{mappedResult.Id}", mappedResult);
+    });
 
 
 app.MapDefaultEndpoints();

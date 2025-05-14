@@ -1,11 +1,15 @@
 ﻿using System.Text;
 using System.Text.Json;
+using AutoMapper;
 using RabbitMQ.Client;
 using TestAspire.ApiService.DataTransferObjects;
+using TestAspire.ApiService.Entities;
 
 namespace TestAspire.ApiService.Services;
 
-public class ResultsPublisherService(ChannelFactory channelFactory, ILogger<ResultsPublisherService> logger)
+public class ResultsPublisherService(
+    ChannelFactory channelFactory,
+    ILogger<ResultsPublisherService> logger)
     : IDisposable
 {
     private readonly IModel _messageChannel = channelFactory.GetCalculationRequestsChannel();
@@ -16,14 +20,14 @@ public class ResultsPublisherService(ChannelFactory channelFactory, ILogger<Resu
     }
 
 
-    public void Send(ResultDto results)
+    public void Send(ResultDto result)
     {
-        var message = JsonSerializer.Serialize(results);
+        var message = JsonSerializer.Serialize(result);
         var body = Encoding.UTF8.GetBytes(message);
         _messageChannel.BasicPublish(string.Empty, channelFactory.RequestsQueueName,
             body: body);
 
         logger.LogInformation(
-            $"Sent Request {results.Id} for algo {results.Algo.Name} for dataset {results.Dataset.Name} (Id: {results.Dataset.Id})");
+            $"Sent Request {result.Id} for algo {result.Algo.Name} for dataset {result.Dataset.Name} (Id: {result.Dataset.Id})");
     }
 }

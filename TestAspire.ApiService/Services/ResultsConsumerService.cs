@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TestAspire.ApiService.DataTransferObjects;
@@ -8,7 +10,9 @@ namespace TestAspire.ApiService.Services;
 
 public class ResultsConsumerService(
     ChannelFactory channelFactory,
-    ILogger<ResultsConsumerService> logger)
+    ILogger<ResultsConsumerService> logger,
+    IDbContextFactory<MyDbContext> contextFactory,
+    IMapper autoMapper)
     : BackgroundService
 {
     private readonly IModel _messageChannel = channelFactory.GetCalculationResultsChannel();
@@ -46,8 +50,8 @@ public class ResultsConsumerService(
 
         var message = e.Body;
 
-        var model = JsonSerializer.Deserialize<ResultDto>(message.Span);
-        if (model is null)
+        var calculationResult = JsonSerializer.Deserialize<ResultDto>(message.Span);
+        if (calculationResult is null)
         {
             logger.LogError(
                 $"Message with messageId: {e.BasicProperties.MessageId} could not be deserialized", message,
@@ -56,9 +60,12 @@ public class ResultsConsumerService(
         }
 
         logger.LogInformation(
-            $"Received result from algo {model!.Algo.Name} for dataset {model!.Dataset.Name} (Id: {model.Dataset.Id})");
+            $"Received result from algo {calculationResult!.Algo.Name} for dataset {calculationResult!.Dataset.Name} (Id: {calculationResult.Dataset.Id})");
 
-        //TODO
-        //store Result to database
+
+        var resultForDb = autoMapper.Map<Result>(calculationResult);
+        using var dbContext = contextFactory.CreateDbContext();
+        dbContext.Update(resultForDb);
+        dbContext.SaveChanges();
     }
 }
