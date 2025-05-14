@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TestAspire.ApiService.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,56 +99,4 @@ app.Run();
 internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
-
-public class MyDbContext : DbContext
-{
-    public MyDbContext(DbContextOptions<MyDbContext> options)
-        : base(options)
-    {
-    }
-
-    public DbSet<Algo> Algos { get; set; }
-    public DbSet<Dataset> Datasets { get; set; }
-    public DbSet<Result> Results { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Dataset>()
-            .HasMany(e => e.Results)
-            .WithOne(e => e.Dataset)
-            .HasForeignKey(e => e.DatasetId)
-            .HasPrincipalKey(e => e.Id);
-        modelBuilder.Entity<Algo>()
-            .HasMany(e => e.Results)
-            .WithOne(e => e.Algo)
-            .HasForeignKey(e => e.AlgoId)
-            .HasPrincipalKey(e => e.Id);
-    }
-}
-
-public class Result
-{
-    public int Id { get; set; }
-    public int DatasetId { get; set; }
-    public required Dataset Dataset { get; set; }
-    public int AlgoId { get; set; }
-    public required Algo Algo { get; set; }
-    public string? ResultJson { get; set; }
-}
-
-public class Dataset
-{
-    public int Id { get; set; }
-    public required string Image { get; set; }
-    public required string Name { get; set; }
-    public ICollection<Result> Results { get; set; }
-}
-
-public class Algo
-{
-    public int Id { get; set; }
-    public required string Name { get; set; }
-    public required string Version { get; set; }
-    public ICollection<Result> Results { get; set; }
 }
