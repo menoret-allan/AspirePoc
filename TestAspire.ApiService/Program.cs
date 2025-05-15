@@ -27,8 +27,10 @@ builder.Services.AddSwaggerGen();
 
 builder.AddRabbitMQClient("messaging");
 builder.Services.AddTransient<ChannelFactory>();
-builder.Services.AddTransient<ResultsPublisherService>();
-builder.Services.AddHostedService<ResultsConsumerService>();
+builder.Services.AddTransient<ResultsPublisher>();
+builder.Services.AddHostedService<ResultsConsumer>();
+builder.Services.AddHostedService<AlgoInfoConsumer>();
+
 
 var app = builder.Build();
 
@@ -128,7 +130,7 @@ app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =
     return Results.Ok(mappedResult);
 });
 app.MapPost("/results",
-    async (ResultDto result, MyDbContext db, IMapper autoMapper, ResultsPublisherService publisher) =>
+    async (ResultDto result, MyDbContext db, IMapper autoMapper, ResultsPublisher publisher) =>
     {
         var resultForDb = autoMapper.Map<Result>(result);
         db.Results.Update(resultForDb);
