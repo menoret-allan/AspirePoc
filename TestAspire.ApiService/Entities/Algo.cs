@@ -6,4 +6,5 @@ public class Algo
     public required string Name { get; set; }
     public required string Version { get; set; }
     public ICollection<Result> Results { get; set; }
+    public bool IsAlive { get; set; }
 }
