@@ -23,7 +23,9 @@ public class ResultsConsumerService(
         consumer.Received += OnConsumerReceived;
         consumer.Shutdown += OnConsumerShutdown;
 
-        _messageChannel.BasicConsume(channelFactory.ResultsQueueName,
+        var queueName = channelFactory.ResultsQueueName;
+        logger.LogDebug($"Subscribe to Queue {queueName}");
+        _messageChannel.BasicConsume(queueName,
             true,
             consumer);
 
@@ -59,13 +61,15 @@ public class ResultsConsumerService(
             return;
         }
 
+        logger.LogTrace($"Received message", calculationResult);
+
         logger.LogInformation(
             $"Received result from algo {calculationResult!.Algo.Name} for dataset {calculationResult!.Dataset.Name} (Id: {calculationResult.Dataset.Id})");
-
 
         var resultForDb = autoMapper.Map<Result>(calculationResult);
         using var dbContext = contextFactory.CreateDbContext();
         dbContext.Update(resultForDb);
         dbContext.SaveChanges();
+        logger.LogTrace($"Result with ID {resultForDb.Id} was updated in database");
     }
 }

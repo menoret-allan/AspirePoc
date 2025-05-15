@@ -23,8 +23,10 @@ public class ResultsPublisherService(
     public void Send(ResultDto result)
     {
         var message = JsonSerializer.Serialize(result);
+        var queueName = channelFactory.RequestsQueueName;
+        logger.LogTrace($"Message will be send on Queue {queueName}", message);
         var body = Encoding.UTF8.GetBytes(message);
-        _messageChannel.BasicPublish(string.Empty, channelFactory.RequestsQueueName,
+        _messageChannel.BasicPublish(string.Empty, queueName,
             body: body);
 
         logger.LogInformation(

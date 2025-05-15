@@ -80,8 +80,11 @@ public class AlgorithmWorker(ILogger<AlgorithmWorker> logger, ChannelFactory cha
     private void SendResponse(ResultDto result)
     {
         var message = JsonSerializer.Serialize(result);
+        var queueName = channelFactory.ResultsQueueName;
+
+        logger.LogTrace($"Message will be send on Queue {queueName}", message);
         var body = Encoding.UTF8.GetBytes(message);
-        _resultsChannel.BasicPublish(string.Empty, channelFactory.ResultsQueueName,
+        _resultsChannel.BasicPublish(string.Empty, queueName,
             body: body);
     }
 }

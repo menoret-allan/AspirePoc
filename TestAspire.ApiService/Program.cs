@@ -111,7 +111,7 @@ app.MapPost("/algos", async (AlgoDto algo, IMapper autoMapper, MyDbContext db) =
 
 app.MapGet("/results", async (IMapper autoMapper, MyDbContext db) =>
 {
-    var resultsInDb = await db.Results.ToListAsync();
+    var resultsInDb = await db.Results.Include(result => result.Algo).Include(result => result.Dataset).ToListAsync();
     var mappedResults = autoMapper.Map<IEnumerable<ResultDto>>(resultsInDb);
     return Results.Ok(mappedResults);
 });
