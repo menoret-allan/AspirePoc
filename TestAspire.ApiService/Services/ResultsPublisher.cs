@@ -7,9 +7,9 @@ using TestAspire.ApiService.Entities;
 
 namespace TestAspire.ApiService.Services;
 
-public class ResultsPublisherService(
+public class ResultsPublisher(
     ChannelFactory channelFactory,
-    ILogger<ResultsPublisherService> logger)
+    ILogger<ResultsPublisher> logger)
     : IDisposable
 {
     private readonly IModel _messageChannel = channelFactory.GetCalculationRequestsChannel();

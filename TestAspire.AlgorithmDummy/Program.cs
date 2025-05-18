@@ -9,6 +9,7 @@ public class Program
         builder.AddServiceDefaults();
         builder.AddRabbitMQClient("messaging");
         builder.Services.AddHostedService<AlgorithmWorker>();
+        builder.Services.AddHostedService<AlgoInfoPublisher>();
         builder.Services.AddTransient<ChannelFactory>();
 
         var host = builder.Build();

@@ -8,9 +8,9 @@ using TestAspire.ApiService.Entities;
 
 namespace TestAspire.ApiService.Services;
 
-public class ResultsConsumerService(
+public class ResultsConsumer(
     ChannelFactory channelFactory,
-    ILogger<ResultsConsumerService> logger,
+    ILogger<ResultsConsumer> logger,
     IDbContextFactory<MyDbContext> contextFactory,
     IMapper autoMapper)
     : BackgroundService
