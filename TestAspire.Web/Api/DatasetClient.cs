@@ -5,12 +5,12 @@ namespace TestAspire.Web.Api;
 
 public class DatasetClient(HttpClient httpClient)
 {
-    public async Task<DatasetBackend[]> GetDatasetsAsync(int maxItems = 10,
+    public async Task<DatasetRead[]> GetDatasetsAsync(int maxItems = 10,
         CancellationToken cancellationToken = default)
     {
-        List<DatasetBackend> datasets = [];
+        List<DatasetRead> datasets = [];
 
-        await foreach (var dataset in httpClient.GetFromJsonAsAsyncEnumerable<DatasetBackend>("/datasets",
+        await foreach (var dataset in httpClient.GetFromJsonAsAsyncEnumerable<DatasetRead>("/datasets",
                            cancellationToken))
         {
             if (datasets.Count >= maxItems) break;
@@ -20,28 +20,24 @@ public class DatasetClient(HttpClient httpClient)
         return datasets.ToArray();
     }
 
-    public async Task<HttpResponseMessage> PostDatasetsAsync(DatasetDetails datasetDetails)
+    public async Task<HttpResponseMessage> PostDatasetsAsync(DatasetWrite datasetWrite)
     {
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(datasetDetails.Name), nameof(datasetDetails.Name) },
-            { new StringContent(datasetDetails.Id.ToString()), nameof(datasetDetails.Id) }
+            { new StringContent(datasetWrite.Name), nameof(datasetWrite.Name) },
+            { new StringContent(datasetWrite.Id.ToString()), nameof(datasetWrite.Id) }
         };
 
-        if (datasetDetails.ImageFile is not null)
+        if (datasetWrite.ImageFile is not null)
         {
-            var streamContent = new StreamContent(datasetDetails.ImageFile.OpenReadStream())
+            var streamContent = new StreamContent(datasetWrite.ImageFile.OpenReadStream())
             {
-                Headers = { ContentType = new MediaTypeHeaderValue(datasetDetails.ImageFile.ContentType) }
+                Headers = { ContentType = new MediaTypeHeaderValue(datasetWrite.ImageFile.ContentType) }
             };
 
-            formData.Add(streamContent, "ImageFile", datasetDetails.ImageFile.FileName);
+            formData.Add(streamContent, "ImageFile", datasetWrite.ImageFile.FileName);
         }
 
         return await httpClient.PostAsync("/datasets", formData);
     }
-}
-
-public record Dataset(int id, string name, byte[] file)
-{
 }

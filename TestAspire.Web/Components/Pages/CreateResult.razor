@@ -1,0 +1,108 @@
+﻿@page "/generateResult"
+@using TestAspire.Web.Api
+@using TestAspire.Web.DataTransferObjects
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject AlgoClient AlgoApi
+@inject DatasetClient DatasetClient
+@inject ResultClient ResultClient
+
+<script>
+    window.previewImage = (event) => {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.hidden = false;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    };
+</script>
+
+
+<PageTitle>Results creation</PageTitle>
+
+<h1>Results creation</h1>
+
+<p>This component allow to create result by matching an algo and a dataset.</p>
+
+@if (datasets == null || algos == null)
+{
+    <p><em>Page is loading...</em></p>
+}
+else
+{
+
+    <EditForm Model="@ResultWrite"
+    FormName="editDataset"
+    OnValidSubmit="HandleSubmitAsync"
+    enctype="multipart/form-data"
+    Enhance>
+        <div class="mb-3">
+            <label for="dataset" class="form-label">Dataset:</label>
+            <InputSelect id="dataset" @bind-Value="ResultWrite.DatasetId" class="form-control">
+                @foreach (var dataset in datasets)
+                {
+                    <option value="@dataset.Id">
+                        @dataset.Name
+                    </option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label for="algo" class="form-label">Algo:</label>
+            <InputSelect id="algo" @bind-Value="ResultWrite.AlgoId" class="form-control">
+                @foreach (var algo in algos)
+                {
+                    <option value="@algo.id">
+                        @algo.name
+                    </option>
+                }
+            </InputSelect>
+        </div>
+        @*     <div class="mb-3">
+        <label for="imageUri" class="form-label">Image:</label>
+        <input id="imageUri"
+        type="file"
+        name="datasetDetails.ImageFile"
+        class="form-control"
+        accept=".png, .jpg, .jpeg"
+        onchange="previewImage(event)" />
+        <img id="imagePreview"
+        alt="image preview"
+        src="@DatasetWrite.ImageUri"
+        hidden
+        class="img-thumbnail mt-2" />
+    </div>
+ *@
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    private DatasetRead[]? datasets;
+    private Algo[]? algos;
+
+    [SupplyParameterFromForm] private ResultWrite ResultWrite { get; set; } = new(0, 0);
+
+    private async Task HandleSubmitAsync()
+    {
+        if (ResultWrite.AlgoId == 0 || ResultWrite.DatasetId == 0)
+        {
+            Console.WriteLine("the algo or the dataset is not set");
+        }
+        else
+        {
+            await ResultClient.PostResultsAsync(ResultWrite);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        datasets = await DatasetClient.GetDatasetsAsync();
+        algos = await AlgoApi.GetAlgosAsync();
+    }
+
+    private static string ConvertImage(byte[] image) => $"data:image;base64,{Convert.ToBase64String(image)}";
+}

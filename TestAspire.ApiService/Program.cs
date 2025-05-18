@@ -54,7 +54,7 @@ app.UseExceptionHandler();
 app.MapGet("/datasets", async (IMapper autoMapper, MyDbContext db) =>
 {
     var datasetsInDb = await db.Datasets.ToListAsync();
-    var mappedDatasets = autoMapper.Map<IEnumerable<ReturnDatasetDto>>(datasetsInDb);
+    var mappedDatasets = autoMapper.Map<IEnumerable<DatasetReadDto>>(datasetsInDb);
     return mappedDatasets;
 });
 app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
@@ -62,7 +62,7 @@ app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) 
     var datasetInDb = await db.Datasets.FindAsync(id);
     if (datasetInDb is null) return Results.NotFound();
 
-    var mappedDataset = autoMapper.Map<ReturnDatasetDto>(datasetInDb);
+    var mappedDataset = autoMapper.Map<DatasetReadDto>(datasetInDb);
     return Results.Ok(mappedDataset);
 });
 app.MapPost("/datasets", async ([FromForm] DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
@@ -112,20 +112,23 @@ app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =
     return Results.Ok(mappedResult);
 });
 app.MapPost("/results",
-    async (ResultDto result, MyDbContext db, IMapper autoMapper, ResultsPublisherService publisher) =>
+    async (ResultWriteDto result, MyDbContext db, IMapper autoMapper, ResultsPublisherService publisher) =>
     {
-        var resultForDb = autoMapper.Map<Result>(result);
-        db.Results.Update(resultForDb);
+        var algo = await db.Algos.FindAsync(result.AlgoId);
+        var dataset = await db.Datasets.FindAsync(result.DatasetId);
+
+        if (algo is null || dataset is null)
+            return Results.NotFound(
+                $"At one one of those element was not found: algo ({result.AlgoId}) or dataset ({result.DatasetId})");
+
+        var createdResult = new Result { Algo = algo, Dataset = dataset, DatasetId = dataset.Id, AlgoId = algo.Id };
+        var resultEntity = db.Results.Add(createdResult);
         await db.SaveChangesAsync();
-        var mappedResult = autoMapper.Map<ResultDto>(resultForDb);
+
+        var mappedResult = autoMapper.Map<ResultDto>(resultEntity.Entity);
         publisher.Send(mappedResult);
 
-        // Input: contains an algo and a dataset
-        // we need to fetch them if they exist and then trigger the algo by using the databus
-        // TODO: post in the bus to run an algo
-        // option1: do the calculation and wait within the endpoint
-        // option2: return OK and do calculation in the background
-        return Results.Created($"/algos/{mappedResult.Id}", mappedResult);
+        return Results.Created($"/algos/{resultEntity.Entity.Id}", resultEntity.Entity);
     });
 
 //app.UseAntiforgery();

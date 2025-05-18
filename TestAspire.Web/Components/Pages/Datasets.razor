@@ -25,26 +25,26 @@
 
 <p>This component allow to submit and fetch datasets.</p>
 
-<EditForm Model="@datasetDetails"
+<EditForm Model="@DatasetWrite"
           FormName="editDataset"
           OnValidSubmit="HandleSubmitAsync"
           enctype="multipart/form-data"
           Enhance>
     <div class="mb-3">
         <label for="name" class="form-label">Name:</label>
-        <InputText id="name" @bind-Value="datasetDetails.Name" class="form-control" />
+        <InputText id="name" @bind-Value="DatasetWrite.Name" class="form-control" />
     </div>
     <div class="mb-3">
         <label for="imageUri" class="form-label">Image:</label>
         <input id="imageUri"
                type="file"
-               name="datasetDetails.ImageFile"
+               name="DatasetWrite.ImageFile"
                class="form-control"
                accept=".png, .jpg, .jpeg"
                onchange="previewImage(event)" />
         <img id="imagePreview"
              alt="image preview"
-             src="@datasetDetails.ImageUri"
+             src="@DatasetWrite.ImageUri"
              hidden
              class="img-thumbnail mt-2" />
     </div>
@@ -81,15 +81,15 @@ else
 }
 
 @code {
-    private DatasetBackend[]? datasets;
-    [SupplyParameterFromForm] private DatasetDetails datasetDetails { get; set; } = new()
+    private DatasetRead[]? datasets;
+    [SupplyParameterFromForm] private DatasetWrite DatasetWrite { get; set; } = new()
     {
         Name = "default name"
     };
 
     private async Task HandleSubmitAsync()
     {
-        await DatasetClient.PostDatasetsAsync(datasetDetails);
+        await DatasetClient.PostDatasetsAsync(DatasetWrite);
 
         datasets = await DatasetClient.GetDatasetsAsync();
     }

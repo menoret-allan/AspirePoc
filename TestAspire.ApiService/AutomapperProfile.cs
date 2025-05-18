@@ -11,7 +11,7 @@ public class AutomapperProfile : Profile
         CreateMap<Result, ResultDto>().ReverseMap();
         CreateMap<Dataset, DatasetDto>().ForMember(dest => dest.ImageFile, opt => opt.Ignore());
         CreateMap<DatasetDto, Dataset>().ConvertUsing(new CustomTypeConverterX());
-        CreateMap<Dataset, ReturnDatasetDto>();
+        CreateMap<Dataset, DatasetReadDto>();
         CreateMap<Algo, AlgoDto>().ReverseMap();
     }
 }

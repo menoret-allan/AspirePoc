@@ -14,8 +14,4 @@
 	  <PackageReference Include="Aspire.StackExchange.Redis" Version="*" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DataTransferObjects\" />
-  </ItemGroup>
-
 </Project>

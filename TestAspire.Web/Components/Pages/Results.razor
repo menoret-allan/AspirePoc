@@ -1,0 +1,60 @@
+﻿@page "/results"
+@using TestAspire.Web.Api
+@using TestAspire.Web.DataTransferObjects
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject ResultClient ResultClient
+
+<PageTitle>Results</PageTitle>
+
+<h1>Results</h1>
+
+<p>This component allow to fetch results.</p>
+
+@if (results == null)
+{
+    <p><em>Page is loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>dataset Name</th>
+                <th>Image</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in results)
+            {
+                <tr>
+                    <td>@result.Dataset.Name</td>
+                    <td>
+                        <img src="@ConvertImage(result.Dataset.Image)" alt="@result.Dataset.Name" />
+                    </td>
+                    @if (result.ResultJson == null)
+                    {
+                        <p><em>Result not yet available, the algo is currently running</em></p>
+                    }
+                    else
+                    {
+                        <td>@result.ResultJson</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ResultRead[]? results;
+
+    protected override async Task OnInitializedAsync()
+    {
+        results = await ResultClient.GetResultsAsync();
+    }
+
+    private static string ConvertImage(byte[] image) => $"data:image;base64,{Convert.ToBase64String(image)}";
+}

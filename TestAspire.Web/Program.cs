@@ -14,6 +14,7 @@ builder.Services.AddOutputCache();
 
 builder.Services.AddHttpClient<AlgoClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
 builder.Services.AddHttpClient<DatasetClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
+builder.Services.AddHttpClient<ResultClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
 
 builder.AddRedisClient("cache");
 
