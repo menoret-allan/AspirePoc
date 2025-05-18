@@ -1,4 +1,3 @@
-using TestAspire.Web;
 using TestAspire.Web.Api;
 using TestAspire.Web.Components;
 
@@ -13,13 +12,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-{
-    // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-    // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-    client.BaseAddress = new Uri("https+http://apiservice");
-});
 builder.Services.AddHttpClient<AlgoClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
+builder.Services.AddHttpClient<DatasetClient>(client => { client.BaseAddress = new Uri("https+http://apiservice"); });
 
 builder.AddRedisClient("cache");
 

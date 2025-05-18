@@ -1,0 +1,103 @@
+﻿@page "/datasets"
+@using TestAspire.Web.Api
+@using TestAspire.Web.DataTransferObjects
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject DatasetClient DatasetClient
+
+<script>
+    window.previewImage = (event) => {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.hidden = false;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    };
+</script>
+
+
+<PageTitle>Datasets</PageTitle>
+
+<h1>Datasets</h1>
+
+<p>This component allow to submit and fetch datasets.</p>
+
+<EditForm Model="@datasetDetails"
+          FormName="editDataset"
+          OnValidSubmit="HandleSubmitAsync"
+          enctype="multipart/form-data"
+          Enhance>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name:</label>
+        <InputText id="name" @bind-Value="datasetDetails.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="imageUri" class="form-label">Image:</label>
+        <input id="imageUri"
+               type="file"
+               name="datasetDetails.ImageFile"
+               class="form-control"
+               accept=".png, .jpg, .jpeg"
+               onchange="previewImage(event)" />
+        <img id="imagePreview"
+             alt="image preview"
+             src="@datasetDetails.ImageUri"
+             hidden
+             class="img-thumbnail mt-2" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+
+
+
+@if (datasets == null)
+{
+    <p><em>Page is loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Image</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dataset in datasets)
+            {
+                <tr>
+                    <td>@dataset.Name</td>
+                    <td>
+                        <img src="@ConvertImage(dataset.Image)" alt="@dataset.Name" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private DatasetBackend[]? datasets;
+    [SupplyParameterFromForm] private DatasetDetails datasetDetails { get; set; } = new()
+    {
+        Name = "default name"
+    };
+
+    private async Task HandleSubmitAsync()
+    {
+        await DatasetClient.PostDatasetsAsync(datasetDetails);
+
+        datasets = await DatasetClient.GetDatasetsAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        datasets = await DatasetClient.GetDatasetsAsync();
+    }
+
+    private static string ConvertImage(byte[] image) => $"data:image;base64,{Convert.ToBase64String(image)}";
+}

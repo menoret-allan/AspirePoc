@@ -1,8 +1,8 @@
 ﻿namespace TestAspire.ApiService.DataTransferObjects;
 
-public class DatasetDto
+public class ReturnDatasetDto
 {
     public int Id { get; set; }
-    public required IFormFile ImageFile { get; set; }
+    public required byte[] Image { get; set; }
     public required string Name { get; set; }
 }

@@ -1,7 +1,6 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RabbitMQ.Client;
-using System.Data;
 using TestAspire.ApiService;
 using TestAspire.ApiService.DataTransferObjects;
 using TestAspire.ApiService.Entities;
@@ -12,9 +11,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
+//builder.Services.AddAntiforgery(options =>
+//{
+//    options.Cookie.Name = "MyAntiforgeryCookie";
+//    options.FormFieldName = "MyAntiforgeryField";
+//    options.HeaderName = "X-CSRF-TOKEN";
+//});
+
+builder.Services.AddAntiforgery();
+
+
 // Add services to the container.
 builder.Services.AddProblemDetails();
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutomapperProfile>());
+builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<AutomapperProfile>(); });
 
 // example of work around because some stuff are not prod ready, we have to disable tracing because some method are missing and called...
 builder.AddNpgsqlDbContext<MyDbContext>("somedb", c => c.DisableTracing = true);
@@ -42,47 +51,28 @@ app.UseSwaggerUI(options =>
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-string[] summaries =
-    ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
-
 app.MapGet("/datasets", async (IMapper autoMapper, MyDbContext db) =>
 {
     var datasetsInDb = await db.Datasets.ToListAsync();
-    var mappedDatasets = autoMapper.Map<IEnumerable<DatasetDto>>(datasetsInDb);
+    var mappedDatasets = autoMapper.Map<IEnumerable<ReturnDatasetDto>>(datasetsInDb);
     return mappedDatasets;
 });
 app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
 {
     var datasetInDb = await db.Datasets.FindAsync(id);
-    if (datasetInDb is null)
-    {
-        return Results.NotFound();
-    }
+    if (datasetInDb is null) return Results.NotFound();
 
-    var mappedDataset = autoMapper.Map<DatasetDto>(datasetInDb);
+    var mappedDataset = autoMapper.Map<ReturnDatasetDto>(datasetInDb);
     return Results.Ok(mappedDataset);
 });
-app.MapPost("/datasets", async (DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
+app.MapPost("/datasets", async ([FromForm] DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
 {
     var datasetForDb = autoMapper.Map<Dataset>(dataset);
     db.Datasets.Update(datasetForDb);
     await db.SaveChangesAsync();
     return Results.Created($"/datasets/{dataset.Id}", autoMapper.Map<DatasetDto>(datasetForDb));
-});
+}).DisableAntiforgery();
+;
 
 app.MapGet("/algos", async (IMapper autoMapper, MyDbContext db) =>
 {
@@ -93,10 +83,7 @@ app.MapGet("/algos", async (IMapper autoMapper, MyDbContext db) =>
 app.MapGet("/algos/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
 {
     var algoInDb = await db.Algos.FindAsync(id);
-    if (algoInDb is null)
-    {
-        return Results.NotFound(id);
-    }
+    if (algoInDb is null) return Results.NotFound(id);
 
     var mappedAlgo = autoMapper.Map<AlgoDto>(algoInDb);
     return Results.Ok(mappedAlgo);
@@ -119,10 +106,7 @@ app.MapGet("/results", async (IMapper autoMapper, MyDbContext db) =>
 app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
 {
     var resultInDb = await db.Results.FindAsync(id);
-    if (resultInDb is null)
-    {
-        return Results.NotFound(id);
-    }
+    if (resultInDb is null) return Results.NotFound(id);
 
     var mappedResult = autoMapper.Map<ResultDto>(resultInDb);
     return Results.Ok(mappedResult);
@@ -144,6 +128,7 @@ app.MapPost("/results",
         return Results.Created($"/algos/{mappedResult.Id}", mappedResult);
     });
 
+//app.UseAntiforgery();
 
 app.MapDefaultEndpoints();
 
@@ -155,7 +140,12 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+//public class FormFileToByteArrayConverter : IValueResolver<DatasetDto, Dataset, byte[]>
+//{
+//    public byte[] Resolve(DatasetDto source, Dataset destination, byte[] destMember, ResolutionContext context)
+//    {
+//        using var ms = new MemoryStream();
+//        source.ImageFile.CopyTo(ms);
+//        return ms.ToArray();
+//    }
+//}
