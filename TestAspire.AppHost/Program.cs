@@ -14,6 +14,7 @@ var rabbitmq = builder.AddRabbitMQ("messaging", username, password)
 
 var postgres = builder
     .AddPostgres("postgres")
+    .PublishAsAzurePostgresFlexibleServer()
     .WithPgAdmin()
     .WithDataVolume(isReadOnly: false);
 
