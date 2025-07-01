@@ -74,7 +74,9 @@ public class AlgorithmWorker(ILogger<AlgorithmWorker> logger, ChannelFactory cha
         request.Algo.Name = "AlgorithmDummy";
         request.Algo.Version = "1.0.0";
 
-        request.ResultJson = request.Dataset.Name + request.Dataset.Image;
+        var name = request.Dataset.Name;
+        request.ResultJson = name.Contains("42") ? "{\"isTheAnswer\":true}" : "{\"isTheAnswer\":false}";
+
         return request;
     }
 
