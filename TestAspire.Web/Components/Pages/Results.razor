@@ -4,6 +4,8 @@
 @attribute [StreamRendering(true)]
 @attribute [OutputCache(Duration = 5)]
 
+@rendermode InteractiveServer
+
 @inject ResultClient ResultClient
 
 <PageTitle>Results</PageTitle>
@@ -24,6 +26,7 @@ else
                 <th>dataset Name</th>
                 <th>Image</th>
                 <th>Result</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -36,12 +39,17 @@ else
                     </td>
                     @if (result.ResultJson == null)
                     {
-                        <p><em>Result not yet available, the algo is currently running</em></p>
+                        <td>
+                            <p><em>Result not yet available, the algo is currently running</em></p>
+                        </td>
                     }
                     else
                     {
                         <td>@result.ResultJson</td>
                     }
+                    <td>
+                                <button class="btn btn-primary" onclick="@(() => Delete(result.Id))">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -53,6 +61,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        results = await ResultClient.GetResultsAsync();
+    }
+
+    private async Task Delete(int id)
+    {
+        await ResultClient.DeleteAsync(id);
+
         results = await ResultClient.GetResultsAsync();
     }
 

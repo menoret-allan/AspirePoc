@@ -1,7 +1,7 @@
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using TestAspire.AlgorithmDummy.DataTransferObjects;
 
 namespace TestAspire.AlgorithmDummy;
@@ -9,12 +9,13 @@ namespace TestAspire.AlgorithmDummy;
 public class AlgorithmWorker(ILogger<AlgorithmWorker> logger, ChannelFactory channelFactory) : BackgroundService
 
 {
-    private readonly IModel _resultsChannel = channelFactory.GetCalculationResultsChannel();
     private readonly IModel _requestsChannel = channelFactory.GetCalculationRequestsChannel();
+    private readonly IModel _resultsChannel = channelFactory.GetCalculationResultsChannel();
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         SubscribeCalculationRequests();
+        return Task.CompletedTask;
     }
 
     private void SubscribeCalculationRequests()
@@ -84,7 +85,6 @@ public class AlgorithmWorker(ILogger<AlgorithmWorker> logger, ChannelFactory cha
 
         logger.LogTrace($"Message will be send on Queue {queueName}", message);
         var body = Encoding.UTF8.GetBytes(message);
-        _resultsChannel.BasicPublish(string.Empty, queueName,
-            body: body);
+        _resultsChannel.BasicPublish(string.Empty, queueName, body: body);
     }
 }

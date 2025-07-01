@@ -11,15 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
-//builder.Services.AddAntiforgery(options =>
-//{
-//    options.Cookie.Name = "MyAntiforgeryCookie";
-//    options.FormFieldName = "MyAntiforgeryField";
-//    options.HeaderName = "X-CSRF-TOKEN";
-//});
 
 builder.Services.AddAntiforgery();
-
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -67,6 +60,16 @@ app.MapGet("/datasets/{id}", async (int id, IMapper autoMapper, MyDbContext db) 
     var mappedDataset = autoMapper.Map<DatasetReadDto>(datasetInDb);
     return Results.Ok(mappedDataset);
 });
+app.MapDelete("/datasets/{id}", async (int id, MyDbContext db) =>
+{
+    var datasetInDb = await db.Datasets.FindAsync(id);
+    if (datasetInDb is null) return Results.NotFound();
+
+    db.Remove(datasetInDb);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
 app.MapPost("/datasets", async ([FromForm] DatasetDto dataset, IMapper autoMapper, MyDbContext db) =>
 {
     var datasetForDb = autoMapper.Map<Dataset>(dataset);
@@ -74,7 +77,6 @@ app.MapPost("/datasets", async ([FromForm] DatasetDto dataset, IMapper autoMappe
     await db.SaveChangesAsync();
     return Results.Created($"/datasets/{dataset.Id}", autoMapper.Map<DatasetDto>(datasetForDb));
 }).DisableAntiforgery();
-;
 
 app.MapGet("/algos", async (IMapper autoMapper, MyDbContext db) =>
 {
@@ -89,6 +91,16 @@ app.MapGet("/algos/{id}", async (int id, IMapper autoMapper, MyDbContext db) =>
 
     var mappedAlgo = autoMapper.Map<AlgoDto>(algoInDb);
     return Results.Ok(mappedAlgo);
+});
+app.MapDelete("/algos/{id}", async (int id, MyDbContext db) =>
+{
+    var algoInDb = await db.Algos.FindAsync(id);
+    if (algoInDb is null) return Results.NotFound(id);
+
+    db.Remove(algoInDb);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
 });
 app.MapPost("/algos", async (AlgoDto algo, IMapper autoMapper, MyDbContext db) =>
 {
@@ -113,6 +125,16 @@ app.MapGet("/results/{id}", async (int id, IMapper autoMapper, MyDbContext db) =
     var mappedResult = autoMapper.Map<ResultDto>(resultInDb);
     return Results.Ok(mappedResult);
 });
+app.MapDelete("/results/{id}", async (int id, MyDbContext db) =>
+{
+    var resultInDb = await db.Results.FindAsync(id);
+    if (resultInDb is null) return Results.NotFound(id);
+
+    db.Remove(resultInDb);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
 app.MapPost("/results",
     async (ResultWriteDto result, MyDbContext db, IMapper autoMapper, ResultsPublisher publisher) =>
     {
@@ -133,8 +155,6 @@ app.MapPost("/results",
         return Results.Created($"/algos/{resultEntity.Entity.Id}", resultEntity.Entity);
     });
 
-//app.UseAntiforgery();
-
 app.MapDefaultEndpoints();
 
 using (var scope = app.Services.CreateScope())
@@ -144,13 +164,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
-//public class FormFileToByteArrayConverter : IValueResolver<DatasetDto, Dataset, byte[]>
-//{
-//    public byte[] Resolve(DatasetDto source, Dataset destination, byte[] destMember, ResolutionContext context)
-//    {
-//        using var ms = new MemoryStream();
-//        source.ImageFile.CopyTo(ms);
-//        return ms.ToArray();
-//    }
-//}

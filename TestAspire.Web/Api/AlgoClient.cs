@@ -15,6 +15,11 @@ public class AlgoClient(HttpClient httpClient)
 
         return algos.ToArray();
     }
+
+    public async Task<HttpResponseMessage> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await httpClient.DeleteAsync($"algos/{id}", cancellationToken);
+    }
 }
 
 public record Algo(int id, string name, string version)

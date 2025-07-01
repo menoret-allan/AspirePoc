@@ -61,7 +61,8 @@ public class ResultsConsumer(
             return;
         }
 
-        logger.LogTrace($"Received message", calculationResult);
+        logger.LogTrace(
+            $"Received message: {calculationResult.Id}, {calculationResult.Algo}, {calculationResult.ResultJson}");
 
         logger.LogInformation(
             $"Received result from algo {calculationResult!.Algo.Name} for dataset {calculationResult!.Dataset.Name} (Id: {calculationResult.Dataset.Id})");

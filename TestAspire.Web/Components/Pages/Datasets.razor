@@ -4,6 +4,8 @@
 @attribute [StreamRendering(true)]
 @attribute [OutputCache(Duration = 5)]
 
+@rendermode InteractiveServer
+
 @inject DatasetClient DatasetClient
 
 <script>
@@ -55,41 +57,53 @@
 
 @if (datasets == null)
 {
-    <p><em>Page is loading...</em></p>
+        <p><em>Page is loading...</em></p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Image</th>
-            </tr>
-        </thead>
-        <tbody>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
             @foreach (var dataset in datasets)
             {
-                <tr>
-                    <td>@dataset.Name</td>
-                    <td>
-                        <img src="@ConvertImage(dataset.Image)" alt="@dataset.Name" />
-                    </td>
-                </tr>
+                        <tr>
+                            <td>@dataset.Name</td>
+                            <td>
+                                <img src="@ConvertImage(dataset.Image)" alt="@dataset.Name" />
+                            </td>
+                            <td>
+                                <button class="btn btn-primary" onclick="@(() => Delete(dataset.Id))">Delete</button>
+                            </td>
+                        </tr>
             }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 }
 
 @code {
     private DatasetRead[]? datasets;
-    [SupplyParameterFromForm] private DatasetWrite DatasetWrite { get; set; } = new()
-    {
-        Name = "default name"
-    };
+    [SupplyParameterFromForm]
+    private DatasetWrite DatasetWrite { get; set; } = new()
+        {
+            Name = "default name"
+        };
 
     private async Task HandleSubmitAsync()
     {
         await DatasetClient.PostDatasetsAsync(DatasetWrite);
+
+        datasets = await DatasetClient.GetDatasetsAsync();
+    }
+
+    private async Task Delete(int id)
+    {
+        await DatasetClient.DeleteAsync(id);
 
         datasets = await DatasetClient.GetDatasetsAsync();
     }

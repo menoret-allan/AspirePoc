@@ -3,6 +3,8 @@
 @attribute [StreamRendering(true)]
 @attribute [OutputCache(Duration = 5)]
 
+@rendermode InteractiveServer
+
 @inject AlgoClient AlgoApi
 
 <PageTitle>Algos</PageTitle>
@@ -10,6 +12,9 @@
 <h1>Algos</h1>
 
 <p>This component allow fetch algos which are available in the backend.</p>
+
+<button name="testing" id="testing" class="btn btn-primary" @onclick="ResetId">Delete</button>
+
 
 @if (algos == null)
 {
@@ -22,6 +27,7 @@ else
             <tr>
                 <th>Name</th>
                 <th>Version</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +36,9 @@ else
                 <tr>
                     <td>@algo.name</td>
                     <td>@algo.version</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="@(() => Delete(algo.id))">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -38,6 +47,30 @@ else
 
 @code {
     private Algo[]? algos;
+
+    public void ResetId()
+    {
+        Console.WriteLine("hey");
+    }
+
+    private void Delete(int id)
+    {
+        Task.Run(async () =>
+            {
+                await AlgoApi.DeleteAsync(id);
+
+                algos = await AlgoApi.GetAlgosAsync();
+            }
+        );
+    }
+
+
+    private async Task DeleteX(int id)
+    {
+        await AlgoApi.DeleteAsync(id);
+
+        algos = await AlgoApi.GetAlgosAsync();
+    }
 
     protected override async Task OnInitializedAsync()
     {

@@ -20,6 +20,11 @@ public class DatasetClient(HttpClient httpClient)
         return datasets.ToArray();
     }
 
+    public async Task<HttpResponseMessage> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await httpClient.DeleteAsync($"datasets/{id}", cancellationToken);
+    }
+
     public async Task<HttpResponseMessage> PostDatasetsAsync(DatasetWrite datasetWrite)
     {
         var formData = new MultipartFormDataContent

@@ -23,4 +23,9 @@ public class ResultClient(HttpClient httpClient)
     {
         return await httpClient.PostAsJsonAsync("/results", resultWrite);
     }
+
+    public async Task<HttpResponseMessage> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await httpClient.DeleteAsync($"results/{id}", cancellationToken);
+    }
 }
