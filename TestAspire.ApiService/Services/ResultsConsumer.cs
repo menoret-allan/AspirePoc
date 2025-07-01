@@ -45,7 +45,7 @@ public class ResultsConsumer(
             $"Consumer shutdown event received: {nameof(shutdownEventArgs.Initiator)} = '{shutdownEventArgs.Initiator}', {nameof(shutdownEventArgs.ReplyCode)} = '{shutdownEventArgs.ReplyCode}', {nameof(shutdownEventArgs.ReplyText)} = '{shutdownEventArgs.ReplyText}', {nameof(shutdownEventArgs.ClassId)} = '{shutdownEventArgs.ClassId}', {nameof(shutdownEventArgs.MethodId)} = '{shutdownEventArgs.MethodId}', {nameof(shutdownEventArgs.Cause)} = '{shutdownEventArgs.Cause}'");
     }
 
-    private void OnConsumerReceived(object? sender, BasicDeliverEventArgs e)
+    private async void OnConsumerReceived(object? sender, BasicDeliverEventArgs e)
     {
         logger.LogInformation(
             $"Processing Result at: {DateTime.UtcNow} with messageId: {e.BasicProperties.MessageId}");
@@ -67,10 +67,18 @@ public class ResultsConsumer(
         logger.LogInformation(
             $"Received result from algo {calculationResult!.Algo.Name} for dataset {calculationResult!.Dataset.Name} (Id: {calculationResult.Dataset.Id})");
 
-        var resultForDb = autoMapper.Map<Result>(calculationResult);
+        //var resultForDb = autoMapper.Map<Result>(calculationResult);
         using var dbContext = contextFactory.CreateDbContext();
-        dbContext.Update(resultForDb);
-        dbContext.SaveChanges();
-        logger.LogTrace($"Result with ID {resultForDb.Id} was updated in database");
+
+        var target = await dbContext.Results.FindAsync(calculationResult.Id);
+        if (target is null)
+        {
+            logger.LogTrace($"Result with ID {calculationResult.Id} was not found.");
+            return;
+        }
+
+        target.ResultJson = calculationResult.ResultJson;
+        await dbContext.SaveChangesAsync();
+        logger.LogTrace($"Result with ID {target.Id} was updated in database");
     }
 }
