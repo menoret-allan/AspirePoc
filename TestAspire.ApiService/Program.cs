@@ -105,6 +105,7 @@ app.MapDelete("/algos/{id}", async (int id, MyDbContext db) =>
 app.MapPost("/algos", async (AlgoDto algo, IMapper autoMapper, MyDbContext db) =>
 {
     var algoForDb = autoMapper.Map<Algo>(algo);
+    algoForDb.IsAlive = false;
     db.Algos.Update(algoForDb);
     await db.SaveChangesAsync();
     return Results.Created($"/algos/{algoForDb.Id}", autoMapper.Map<AlgoDto>(algoForDb));
@@ -161,6 +162,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
     db.Database.Migrate();
+    await db.Algos.ForEachAsync(x => x.IsAlive = false);
+    await db.SaveChangesAsync();
 }
 
 app.Run();

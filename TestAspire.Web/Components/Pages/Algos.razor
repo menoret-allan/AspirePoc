@@ -1,5 +1,6 @@
 ﻿@page "/algos"
 @using TestAspire.Web.Api
+@using TestAspire.Web.DataTransferObjects
 @attribute [StreamRendering(true)]
 @attribute [OutputCache(Duration = 5)]
 
@@ -13,8 +14,22 @@
 
 <p>This component allow fetch algos which are available in the backend.</p>
 
-<button name="testing" id="testing" class="btn btn-primary" @onclick="ResetId">Delete</button>
 
+<EditForm Model="@AlgoWrite"
+          FormName="editDataset"
+          OnValidSubmit="HandleSubmitAsync"
+          enctype="multipart/form-data"
+          Enhance>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name:</label>
+        <InputText id="name" @bind-Value="AlgoWrite.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="version" class="form-label">Version:</label>
+        <InputText id="version" @bind-Value="AlgoWrite.Version" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
 
 @if (algos == null)
 {
@@ -27,6 +42,7 @@ else
             <tr>
                 <th>Name</th>
                 <th>Version</th>
+                <th>Alive</th>
                 <th>Delete</th>
             </tr>
         </thead>
@@ -36,6 +52,7 @@ else
                 <tr>
                     <td>@algo.name</td>
                     <td>@algo.version</td>
+                    <td>@algo.isAlive</td>
                     <td>
                         <button class="btn btn-primary" onclick="@(() => Delete(algo.id))">Delete</button>
                     </td>
@@ -47,11 +64,20 @@ else
 
 @code {
     private Algo[]? algos;
-
-    public void ResetId()
+    [SupplyParameterFromForm]
+    private AlgoWrite AlgoWrite { get; set; } = new()
     {
-        Console.WriteLine("hey");
+        Name = "Algo name",
+        Version = "X.X.X.X"
+    };
+
+    private async Task HandleSubmitAsync()
+    {
+        await AlgoApi.PostAsync(AlgoWrite);
+
+        algos = await AlgoApi.GetAlgosAsync();
     }
+
 
     private void Delete(int id)
     {
