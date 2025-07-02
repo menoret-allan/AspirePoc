@@ -64,14 +64,6 @@ else
         );
     }
 
-
-    private async Task DeleteX(int id)
-    {
-        await AlgoApi.DeleteAsync(id);
-
-        algos = await AlgoApi.GetAlgosAsync();
-    }
-
     protected override async Task OnInitializedAsync()
     {
         algos = await AlgoApi.GetAlgosAsync();
